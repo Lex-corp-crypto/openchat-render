@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Salle: {{ room.name }} - OpenChat{% endblock %}
+
+{% block extra_js %}
+<script>
+    const roomName = "{{ room.name }}";
+    const currentUser = "{{ user.username }}";
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div class="flex h-[80vh]">
+            <!-- Sidebar des participants -->
+            <div class="w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col">
+                <!-- En-tête de la salle -->
+                <div class="p-4 bg-white border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800">{{ room.name }}</h2>
+                    <p class="text-sm text-gray-600 mt-1">{{ room.description }}</p>
+                    <div class="flex items-center mt-2 text-sm text-gray-500">
+                        <i class="fas fa-users mr-2"></i>
+                        <span id="online-count">0</span> en ligne
+                    </div>
+                </div>
+
+                <!-- Liste des utilisateurs en ligne -->
+                <div class="flex-1 p-4 overflow-y-auto">
+                    <h3 class="font-semibold text-gray-700 mb-3">Participants en ligne</h3>
+                    <div id="online-users" class="space-y-2">
+                        <!-- Les utilisateurs en ligne seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Indicateur de frappe -->
+                <div id="typing-indicator" class="p-4 border-t border-gray-200 hidden">
+                    <p class="text-sm text-gray-600 italic">
+                        <span id="typing-users"></span> <span class="typing-indicator"><span>.</span><span>.</span><span>.</span></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Zone de chat principale -->
+            <div class="flex-1 flex flex-col">
+                <!-- Messages -->
+                <div id="chat-messages" class="flex-1 p-6 overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-50">
+                    <!-- Les messages seront chargés ici -->
+                    <div class="text-center text-gray-500 py-8" id="no-messages">
+                        <i class="fas fa-comments text-4xl mb-4"></i>
+                        <p>Aucun message pour le moment. Soyez le premier à parler !</p>
+                    </div>
+                </div>
+
+                <!-- Zone de saisie -->
+                <div class="border-t border-gray-200 p-4 bg-white">
+                    <form id="chat-form" class="flex space-x-4">
+                        {% csrf_token %}
+                        <div class="flex-1">
+                            <input 
+                                type="text" 
+                                id="chat-input" 
+                                placeholder="Tapez votre message ici..." 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200"
+                                maxlength="1000"
+                            >
+                        </div>
+                        <button 
+                            type="submit" 
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition duration-200 flex items-center space-x-2"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Envoyer</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
