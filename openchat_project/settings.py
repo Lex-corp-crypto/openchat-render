@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-render-will-replace')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
 if not DEBUG:
@@ -16,6 +16,8 @@ if not DEBUG:
         '127.0.0.1',
         '.onrender.com'
     ]
+else:
+    ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'daphne',
@@ -70,12 +72,32 @@ DATABASES = {
     )
 }
 
-# Configuration Channels - Solution simple pour Render
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    },
-}
+# CONFIGURATION REDIS SIMPLIFIÉE - ÇA MARCHE TOUJOURS !
+import redis
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+
+try:
+    # Test de connexion Redis
+    r = redis.from_url(REDIS_URL)
+    r.ping()
+    # Si Redis marche, on l'utilise
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+    print("✅ Redis connecté - WebSockets activés")
+except:
+    # Fallback si Redis échoue
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        },
+    }
+    print("⚠️ Redis échoué - Mode mémoire activé")
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"

@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
-from .models import ChatRoom, Message
+from .models import ChatRoom, Message, RoomParticipant
 import json
 
 @login_required
@@ -17,7 +17,6 @@ def create_room(request):
         description = request.POST.get('description')
         
         if name:
-            # Nettoyer le nom
             name = name.replace(' ', '_').lower()
             
             if not ChatRoom.objects.filter(name=name).exists():
@@ -37,20 +36,20 @@ def create_room(request):
 @login_required
 def chat_room(request, room_name):
     room = get_object_or_404(ChatRoom, name=room_name)
-    messages_list = Message.objects.filter(room=room).select_related('user')[:50]
+    messages = Message.objects.filter(room=room).select_related('user')[:50]
     
     return render(request, 'chat/room.html', {
         'room': room,
-        'messages': messages_list,
+        'messages': messages,
     })
 
 @login_required
 def room_messages(request, room_name):
     room = get_object_or_404(ChatRoom, name=room_name)
-    messages_list = Message.objects.filter(room=room).select_related('user')[:50]
+    messages = Message.objects.filter(room=room).select_related('user')[:50]
     
     messages_data = []
-    for message in messages_list:
+    for message in messages:
         messages_data.append({
             'type': 'chat_message',
             'message': message.content,
@@ -65,7 +64,6 @@ def room_messages(request, room_name):
 def delete_room(request, room_name):
     room = get_object_or_404(ChatRoom, name=room_name)
     
-    # Vérifier que l'utilisateur est admin ou a créé des messages
     if request.user.is_staff or room.messages.filter(user=request.user).exists():
         room_name = room.name
         room.delete()
