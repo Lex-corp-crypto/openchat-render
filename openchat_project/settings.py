@@ -1,21 +1,14 @@
 import os
-import dj_database_url
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-render-will-replace')
-
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-render-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = []
 if not DEBUG:
-    ALLOWED_HOSTS = [
-        os.environ.get('RENDER_EXTERNAL_HOSTNAME', ''),
-        'localhost',
-        '127.0.0.1',
-        '.onrender.com'
-    ]
+    ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 else:
     ALLOWED_HOSTS = ['*']
 
@@ -65,47 +58,38 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'openchat_project.asgi.application'
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600
-    )
+# CONFIGURATION RENDER
+if 'RENDER' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600
+        )
+    }
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    # CONFIGURATION LOCAL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# WEBSOCKETS EN MODE MÉMOIRE - MARCHE PARTOUT
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    },
 }
-
-# CONFIGURATION REDIS SIMPLIFIÉE - ÇA MARCHE TOUJOURS !
-import redis
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
-
-try:
-    # Test de connexion Redis
-    r = redis.from_url(REDIS_URL)
-    r.ping()
-    # Si Redis marche, on l'utilise
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                "hosts": [REDIS_URL],
-            },
-        },
-    }
-    print("✅ Redis connecté - WebSockets activés")
-except:
-    # Fallback si Redis échoue
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer'
-        },
-    }
-    print("⚠️ Redis échoué - Mode mémoire activé")
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -121,9 +105,3 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
