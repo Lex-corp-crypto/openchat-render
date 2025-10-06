@@ -13,31 +13,48 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-6">
-    <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
         <div class="flex h-[80vh]">
             <!-- Sidebar des participants -->
-            <div class="w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col">
+            <div class="w-1/4 bg-gray-50 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600 flex flex-col">
                 <!-- En-tête de la salle -->
-                <div class="p-4 bg-white border-b border-gray-200">
-                    <h2 class="text-xl font-bold text-gray-800">{{ room.name }}</h2>
-                    <p class="text-sm text-gray-600 mt-1">{{ room.description }}</p>
-                    <div class="flex items-center mt-2 text-sm text-gray-500">
-                        <i class="fas fa-users mr-2"></i>
-                        <span id="online-count">0</span> en ligne
+                <div class="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ room.name }}</h2>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{ room.description }}</p>
+                            <div class="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-users mr-2"></i>
+                                <span id="online-count">0</span> en ligne
+                            </div>
+                        </div>
+                        <a href="{% url 'chat:index' %}" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Liste des utilisateurs en ligne -->
                 <div class="flex-1 p-4 overflow-y-auto">
-                    <h3 class="font-semibold text-gray-700 mb-3">Participants en ligne</h3>
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">Participants en ligne</h3>
                     <div id="online-users" class="space-y-2">
                         <!-- Les utilisateurs en ligne seront ajoutés ici dynamiquement -->
                     </div>
                 </div>
 
+                <!-- Bouton suppression salle -->
+                <div class="p-4 border-t border-gray-200 dark:border-gray-600">
+                    <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                        <h4 class="font-semibold text-red-800 dark:text-red-200 mb-2 text-sm">Actions de la salle</h4>
+                        <button onclick="confirmDelete()" class="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-trash mr-2"></i>Supprimer cette salle
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Indicateur de frappe -->
-                <div id="typing-indicator" class="p-4 border-t border-gray-200 hidden">
-                    <p class="text-sm text-gray-600 italic">
+                <div id="typing-indicator" class="p-4 border-t border-gray-200 dark:border-gray-600 hidden">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 italic">
                         <span id="typing-users"></span> <span class="typing-indicator"><span>.</span><span>.</span><span>.</span></span>
                     </p>
                 </div>
@@ -46,30 +63,34 @@
             <!-- Zone de chat principale -->
             <div class="flex-1 flex flex-col">
                 <!-- Messages -->
-                <div id="chat-messages" class="flex-1 p-6 overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-50">
+                <div id="chat-messages" class="flex-1 p-6 overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-600 dark:to-gray-700">
                     <!-- Les messages seront chargés ici -->
-                    <div class="text-center text-gray-500 py-8" id="no-messages">
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-8" id="no-messages">
                         <i class="fas fa-comments text-4xl mb-4"></i>
                         <p>Aucun message pour le moment. Soyez le premier à parler !</p>
                     </div>
                 </div>
 
                 <!-- Zone de saisie -->
-                <div class="border-t border-gray-200 p-4 bg-white">
+                <div class="border-t border-gray-200 dark:border-gray-600 p-4 bg-white dark:bg-gray-800">
                     <form id="chat-form" class="flex space-x-4">
                         {% csrf_token %}
-                        <div class="flex-1">
+                        <div class="flex-1 flex space-x-2">
+                            <button type="button" class="emoji-toggle px-3 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 transform hover:scale-110">
+                                <i class="fas fa-smile text-lg"></i>
+                            </button>
                             <input 
                                 type="text" 
                                 id="chat-input" 
                                 placeholder="Tapez votre message ici..." 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200"
+                                class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
                                 maxlength="1000"
+                                autocomplete="off"
                             >
                         </div>
                         <button 
                             type="submit" 
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition duration-200 flex items-center space-x-2"
+                            class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white px-6 py-3 rounded-lg transition duration-200 flex items-center space-x-2"
                         >
                             <i class="fas fa-paper-plane"></i>
                             <span>Envoyer</span>
@@ -80,4 +101,12 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDelete() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette salle ? Tous les messages seront perdus définitivement.')) {
+        window.location.href = "{% url 'chat:delete_room' room.name %}";
+    }
+}
+</script>
 {% endblock %}

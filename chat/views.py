@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.utils import timezone
+from django.contrib import messages
 from .models import ChatRoom, Message
 import json
 
@@ -17,10 +17,9 @@ def create_room(request):
         description = request.POST.get('description')
         
         if name:
-            # Nettoyer le nom (pas d'espaces, caractères spéciaux)
+            # Nettoyer le nom
             name = name.replace(' ', '_').lower()
             
-            # Vérifier si la salle existe déjà
             if not ChatRoom.objects.filter(name=name).exists():
                 room = ChatRoom.objects.create(
                     name=name,
@@ -29,7 +28,6 @@ def create_room(request):
                 )
                 return redirect('chat:chat_room', room_name=room.name)
             else:
-                # Gérer le cas où la salle existe déjà
                 return render(request, 'chat/create_room.html', {
                     'error': 'Une salle avec ce nom existe déjà'
                 })
@@ -39,20 +37,20 @@ def create_room(request):
 @login_required
 def chat_room(request, room_name):
     room = get_object_or_404(ChatRoom, name=room_name)
-    messages = Message.objects.filter(room=room).select_related('user')[:50]
+    messages_list = Message.objects.filter(room=room).select_related('user')[:50]
     
     return render(request, 'chat/room.html', {
         'room': room,
-        'messages': messages,
+        'messages': messages_list,
     })
 
 @login_required
 def room_messages(request, room_name):
     room = get_object_or_404(ChatRoom, name=room_name)
-    messages = Message.objects.filter(room=room).select_related('user')[:50]
+    messages_list = Message.objects.filter(room=room).select_related('user')[:50]
     
     messages_data = []
-    for message in messages:
+    for message in messages_list:
         messages_data.append({
             'type': 'chat_message',
             'message': message.content,
@@ -62,3 +60,17 @@ def room_messages(request, room_name):
         })
     
     return JsonResponse(messages_data, safe=False)
+
+@login_required
+def delete_room(request, room_name):
+    room = get_object_or_404(ChatRoom, name=room_name)
+    
+    # Vérifier que l'utilisateur est admin ou a créé des messages
+    if request.user.is_staff or room.messages.filter(user=request.user).exists():
+        room_name = room.name
+        room.delete()
+        messages.success(request, f"La salle '{room_name}' a été supprimée.")
+        return redirect('chat:index')
+    else:
+        messages.error(request, "Vous n'avez pas la permission de supprimer cette salle.")
+        return redirect('chat:chat_room', room_name=room_name)

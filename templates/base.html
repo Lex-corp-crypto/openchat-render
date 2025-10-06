@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}OpenChat - Discussion en Temps Réel{% endblock %}</title>
+    <title>{% block title %}OpenChat - Discussion en Temps Réel{% endblock %title %}
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Emoji Support -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <!-- Custom CSS -->
     <style>
         .message-enter {
@@ -41,37 +40,135 @@
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-10px); }
         }
+
+        /* Mode sombre */
+        .dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .bg-white {
+            background-color: #2d3748;
+        }
+
+        .dark-mode .bg-gray-50 {
+            background-color: #2d3748;
+        }
+
+        .dark-mode .bg-gray-100 {
+            background-color: #4a5568;
+        }
+
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .text-gray-600 {
+            color: #cbd5e0;
+        }
+
+        .dark-mode .text-gray-500 {
+            color: #a0aec0;
+        }
+
+        .dark-mode .border-gray-200 {
+            border-color: #4a5568;
+        }
+
+        .dark-mode .border-gray-300 {
+            border-color: #4a5568;
+        }
+
+        .dark-mode .bg-indigo-600 {
+            background-color: #4f46e5;
+        }
+
+        .dark-mode .bg-indigo-700 {
+            background-color: #4338ca;
+        }
+
+        /* Switch mode sombre */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4f46e5;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- Navigation -->
-    <!-- Navigation -->
-<nav class="bg-indigo-600 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between items-center py-4">
-            <div class="flex items-center space-x-4">
-                <i class="fas fa-comments text-2xl"></i>
-                <h1 class="text-xl font-bold">OpenChat</h1>
-            </div>
-            
-            <div class="flex items-center space-x-4">
-                {% if user.is_authenticated %}
-                    <span class="text-indigo-200">Bienvenue, {{ user.username }}</span>
-                    <a href="{% url 'logout' %}" class="bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-lg transition duration-200">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
-                    </a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-lg transition duration-200">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
-                    </a>
-                    <a href="{% url 'accounts:register' %}" class="bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition duration-200">
-                        <i class="fas fa-user-plus mr-2"></i>Inscription
-                    </a>
-                {% endif %}
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-comments text-2xl"></i>
+                    <h1 class="text-xl font-bold">OpenChat</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Switch Mode Sombre -->
+                    <label class="theme-switch" for="theme-toggle" title="Mode sombre">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    
+                    {% if user.is_authenticated %}
+                        <span class="text-indigo-200">Bienvenue, {{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-lg transition duration-200">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-lg transition duration-200">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition duration-200">
+                            <i class="fas fa-user-plus mr-2"></i>Inscription
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
     <!-- Messages -->
     {% if messages %}
         <div class="max-w-7xl mx-auto px-4 mt-4">
@@ -91,6 +188,32 @@
 
     <!-- Scripts JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+    <!-- Mode sombre -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (themeToggle) themeToggle.checked = true;
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+    });
+    </script>
+    
     {% block extra_js %}
     {% endblock %}
 </body>
