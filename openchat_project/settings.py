@@ -3,14 +3,20 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-render-key')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.fly.dev',
+    '.onrender.com'  # Garde l'ancien au cas où
+]
+
+# Ajoute ton nom de domaine Fly.io une fois déployé
 if not DEBUG:
-    ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
-else:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS.append('.fly.dev')
 
 INSTALLED_APPS = [
     'daphne',
@@ -21,8 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'crispy_forms',
-    'crispy_tailwind',
     'chat',
     'accounts',
 ]
@@ -58,38 +62,35 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'openchat_project.asgi.application'
 
-# CONFIGURATION RENDER
-if 'RENDER' in os.environ:
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600
-        )
+# BASE DE DONNÉES - Fly.io fournit DATABASE_URL
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-    STATIC_ROOT = BASE_DIR / 'staticfiles'
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-else:
-    # CONFIGURATION LOCAL
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
-# WEBSOCKETS EN MODE MÉMOIRE - MARCHE PARTOUT
+# Pour la production, Fly.io injecte DATABASE_URL
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+
+# REDIS - Fly.io fournit REDIS_URL
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [REDIS_URL],
+        },
     },
 }
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
-CRISPY_TEMPLATE_PACK = "bootstrap4"
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -105,3 +106,9 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
